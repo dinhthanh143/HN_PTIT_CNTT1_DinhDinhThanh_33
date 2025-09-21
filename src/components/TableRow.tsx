@@ -2,18 +2,30 @@ import React, { useEffect, useState } from "react";
 import type { ProductType } from "../reducers/productReducer";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootType } from "../store/store";
+import Swal from "sweetalert2";
 type Prop = {
   index: number;
   item: ProductType;
 };
 export const TableRow = ({ item, index }: Prop) => {
-  const { products } = useSelector((state: RootType) => state);
+  const { products, cart } = useSelector((state: RootType) => state);
   const dispatch = useDispatch();
   const handeDelete = (id: number, quantity: number) => {
-    dispatch({ type: "DELETE_ITEM", payload: id });
-    dispatch({
-      type: "RESTORE_QUANTITY",
-      payload: { id: id, quantity: quantity },
+    Swal.fire({
+      title: "Ban co chac muon xoa san pham nay khoi gio?",
+      showDenyButton: true,
+      confirmButtonText: "Xác nhận",
+      denyButtonText: `Huỷ`,
+    }).then((result) => {
+      /* Read more about isConfirmed, isDenied below */
+      if (result.isConfirmed) {
+        dispatch({ type: "DELETE_ITEM", payload: id });
+        dispatch({
+          type: "RESTORE_QUANTITY",
+          payload: { id: id, quantity: quantity },
+        });
+        Swal.fire("Xoá thành công!", "", "success");
+      }
     });
   };
   const handleUpdate = (product: ProductType) => {
@@ -42,9 +54,14 @@ export const TableRow = ({ item, index }: Prop) => {
       dispatch({ type: "OFF" });
     }, 2000);
   };
-
+  useEffect(() => {
+    if (cart.length === 0) {
+      localStorage.setItem("cart", JSON.stringify([]));
+    } else {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  }, [cart]);
   const [amount, setAmount] = useState<number | null>(null);
-
   useEffect(() => {
     setAmount(null);
   }, [item]);
